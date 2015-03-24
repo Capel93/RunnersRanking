@@ -1,0 +1,78 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.joanmarc.runnersranking.RankingFragment">
+
+    <TabHost
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/tabHostRank"
+        android:layout_below="@+id/map_detail_route"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
+
+            <TabWidget
+                android:id="@android:id/tabs"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"></TabWidget>
+
+            <FrameLayout
+                android:id="@android:id/tabcontent"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+                <LinearLayout
+                    android:id="@+id/global"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:orientation="vertical">
+
+                    <ListView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/listViewGlobal" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/friends"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:orientation="vertical">
+
+                    <ListView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/listViewFriends" />
+                </LinearLayout>
+
+
+            </FrameLayout>
+        </LinearLayout>
+
+    </TabHost>
+
+    <Spinner
+        android:layout_width="207dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:entries="@array/select_filter"
+        android:prompt="@string/filter_prompt"
+        android:layout_gravity="left|top"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filter"
+        android:id="@+id/button"
+        android:layout_alignBottom="@+id/spinner"
+        android:layout_alignTop="@+id/spinner"
+        android:layout_toRightOf="@+id/spinner" />
+
+</RelativeLayout>

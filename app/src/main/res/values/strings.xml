@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RunnersRanking</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_menu">MenuActivity</string>
+    <string name="perfil">PERFIL</string>
+    <string name="iniciar">INICIAR</string>
+    <string name="ranking">RANKING</string>
+    <string name="historial">HISTORIAL</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_example">Example action</string>
+    <string name="action_settings">Profile</string>
+    <string name="title_activity_tab">TabActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_action_bar_tab">ActionBarTabActivity</string>
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+    <string name="title_activity_detail_route">DetailRoute</string>
+    <string name="calories">calories</string>
+    <string name="distance">distance</string>
+    <string name="rate">rate</string>
+    <string name="filter_prompt">Escull un filtre per al ranking</string>
+    <string-array name="select_filter">
+        <item>Distance</item>
+        <item>Rate</item>
+        <item>Time</item>
+    </string-array>
+
+</resources>

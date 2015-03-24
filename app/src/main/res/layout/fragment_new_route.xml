@@ -1,0 +1,64 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.joanmarc.runnersranking.NewRouteFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Iniciar"
+        android:id="@+id/iniciar"
+        android:layout_gravity="center_horizontal"
+        android:textSize="28dp"
+        android:minHeight="80dp"
+        android:minWidth="160dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="20dp"
+        android:background="#ffa1ccff"
+        android:paddingRight="10dp" />
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapview"
+        android:layout_width="300dip"
+        android:layout_height="170dip"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/chronometer">
+    </com.google.android.gms.maps.MapView>
+
+    <Chronometer
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chronometer"
+        android:layout_centerHorizontal="true"
+        android:minWidth="300dp"
+        android:minHeight="80dp"
+        android:textSize="80dp"
+        android:textColor="#ff3f8eff"
+        android:textAlignment="center"
+        android:gravity="center_horizontal" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="stop"
+        android:id="@+id/stop"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="false"
+        android:layout_alignRight="@+id/iniciar"
+        android:layout_alignBottom="@+id/iniciar"
+        android:minHeight="80dp"
+        android:minWidth="160dp"
+        android:layout_marginRight="20dp"
+        android:textSize="28dp"
+        android:singleLine="false"
+        android:background="#ffff5854"
+        android:paddingLeft="10dp" />
+
+
+</RelativeLayout>
