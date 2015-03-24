@@ -1,5 +1,6 @@
 package com.example.joanmarc.runnersranking;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import android.app.AlertDialog;
@@ -21,6 +22,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
@@ -41,6 +44,8 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
+    private ArrayList array;
+    private ArrayAdapter arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +110,52 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
             Intent i = new Intent(this,ProfileActivity.class);
             startActivity(i);
             return true;
+        }
+        if(id == R.id.add_user){
+            AlertDialog.Builder builderSingle = new AlertDialog.Builder(ActionBarTabActivity.this);
+            builderSingle.setIcon(R.drawable.ic_launcher);
+            builderSingle.setTitle("Select One user:-");
+            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                    ActionBarTabActivity.this,
+                    android.R.layout.select_dialog_singlechoice);
+            arrayAdapter.add("Joan");
+            arrayAdapter.add("Marc");
+            arrayAdapter.add("Joel");
+            arrayAdapter.add("Guillem");
+            arrayAdapter.add("Sergi");
+            builderSingle.setNegativeButton("cancel",
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+
+            builderSingle.setAdapter(arrayAdapter,
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String strName = arrayAdapter.getItem(which);
+                            AlertDialog.Builder builderInner = new AlertDialog.Builder(
+                                    ActionBarTabActivity.this);
+                            builderInner.setMessage(strName);
+                            builderInner.setTitle("User is added as your friend");
+                            builderInner.setPositiveButton("Ok",
+                                    new DialogInterface.OnClickListener() {
+
+                                        @Override
+                                        public void onClick(
+                                                DialogInterface dialog,
+                                                int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                            builderInner.show();
+                        }
+                    });
+            builderSingle.show();
         }
 
         return super.onOptionsItemSelected(item);

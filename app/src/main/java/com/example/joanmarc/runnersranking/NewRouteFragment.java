@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Criteria;
@@ -71,6 +72,7 @@ public class NewRouteFragment extends Fragment {
     private Location loc = null;
     private LocationManager locationManager;
     private Criteria crta;
+    private long time;
 
 
     /**
@@ -136,6 +138,7 @@ public class NewRouteFragment extends Fragment {
         stop.setText("STOP");
 
 
+
         // Buttons
         start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,16 +146,19 @@ public class NewRouteFragment extends Fragment {
 
                 if (startRoute) {
                     chronometer.stop();
+
                     startRoute = false;
                     start.setText("Iniciar");
+                    start.setBackgroundColor(0xffa1ccff);
 
                 } else {
-                    chronometer.setBase(SystemClock.elapsedRealtime());
+
+
                     chronometer.start();
                     startRoute = true;
 
                     start.setText("Pausa");
-                    start.setBackgroundColor(Color.YELLOW);
+                    start.setBackgroundColor(0xFFFFFB7A);
 
                 }
 
@@ -167,11 +173,78 @@ public class NewRouteFragment extends Fragment {
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Guardar activitad")
                         .setMessage("Quiere guardar esta nueva actividad?")
-                        .setNegativeButton(android.R.string.no, null)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        .setNegativeButton(android.R.string.no,new DialogInterface.OnClickListener() {
 
                             public void onClick(DialogInterface arg0, int arg1) {
                                 NewRouteFragment.newInstance();
+
+                            }
+                        })
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                            public void onClick(DialogInterface arg0, int arg1) {
+                                new AlertDialog.Builder(getActivity())
+                                        .setTitle("Reto")
+                                        .setMessage("Quiere retar a algun amigo?")
+                                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+
+                                            public void onClick(DialogInterface arg0, int arg1) {
+                                                NewRouteFragment.newInstance();
+
+                                            }
+                                        })
+                                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                            public void onClick(DialogInterface arg0, int arg1) {
+
+                                                AlertDialog.Builder builderSingle = new AlertDialog.Builder(getActivity());
+                                                builderSingle.setIcon(R.drawable.ic_launcher);
+                                                builderSingle.setTitle("Select One user:-");
+                                                final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                                                        getActivity(),
+                                                        android.R.layout.select_dialog_singlechoice);
+                                                arrayAdapter.add("Joan");
+                                                arrayAdapter.add("Marc");
+                                                arrayAdapter.add("Joel");
+                                                arrayAdapter.add("Guillem");
+                                                arrayAdapter.add("Sergi");
+                                                builderSingle.setNegativeButton("cancel",
+                                                        new DialogInterface.OnClickListener() {
+
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                dialog.dismiss();
+                                                            }
+                                                        });
+
+                                                builderSingle.setAdapter(arrayAdapter,
+                                                        new DialogInterface.OnClickListener() {
+
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                String strName = arrayAdapter.getItem(which);
+                                                                AlertDialog.Builder builderInner = new AlertDialog.Builder(
+                                                                        getActivity());
+                                                                builderInner.setMessage(strName);
+                                                                builderInner.setTitle("You have challenged: ");
+                                                                builderInner.setPositiveButton("Ok",
+                                                                        new DialogInterface.OnClickListener() {
+
+                                                                            @Override
+                                                                            public void onClick(
+                                                                                    DialogInterface dialog,
+                                                                                    int which) {
+                                                                                dialog.dismiss();
+                                                                            }
+                                                                        });
+                                                                builderInner.show();
+                                                            }
+                                                        });
+                                                builderSingle.show();
+                                            }
+                                        }).create().show();
+                                NewRouteFragment.newInstance();
+                                //Guardar
                             }
                         }).create().show();
             }
@@ -251,6 +324,7 @@ public class NewRouteFragment extends Fragment {
                     .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
 
                         public void onClick(DialogInterface arg0, int arg1) {
+
                             provider = locationManager.getBestProvider(crta, true);
                             loc = locationManager.getLastKnownLocation(provider);
                             locationManager.requestLocationUpdates(provider,1000,0,locationListener);
@@ -259,7 +333,7 @@ public class NewRouteFragment extends Fragment {
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                         public void onClick(DialogInterface arg0, int arg1) {
-
+                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                         }
                     }).create().show();
 

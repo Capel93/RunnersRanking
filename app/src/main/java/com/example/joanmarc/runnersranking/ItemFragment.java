@@ -243,7 +243,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             ImageButton profile_image=(ImageButton)vi.findViewById(R.id.list_image); // profile image
             Route r = routes.get(position);
             date.setText(r.getDate().toString());
-            duration.setText(r.getDate().toString());
+            //duration.setText(r.getDate());
 
             vi.setOnClickListener(new View.OnClickListener() {
                 @Override

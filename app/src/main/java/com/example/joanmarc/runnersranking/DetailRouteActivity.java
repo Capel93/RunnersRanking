@@ -22,6 +22,7 @@ import android.widget.TabHost;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
@@ -106,6 +107,9 @@ public class DetailRouteActivity extends ActionBarActivity {
 
 
             MapsInitializer.initialize(this.getActivity());
+
+
+
 
             //TabHost
             TabHost tabHost = (TabHost) rootView.findViewById(R.id.tabHost);

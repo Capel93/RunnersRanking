@@ -33,5 +33,6 @@
         <item>Rate</item>
         <item>Time</item>
     </string-array>
+    <string name="add_friend">Add friend</string>
 
 </resources>
