@@ -7,9 +7,11 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -28,10 +30,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.joanmarc.myapplication.backend.registration.Registration;
+import com.example.joanmarc.myapplication.backend.usersApi.UsersApi;
+import com.example.joanmarc.myapplication.backend.usersApi.model.Users;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,10 +118,20 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         });
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptLogin();
+            }
+        });
+
+        Button register = (Button) findViewById(R.id.register);
+        register.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(login,RegisterActivity.class);
+                startActivity(i);
             }
         });
 
@@ -344,6 +363,15 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
         private final String mEmail;
         private final String mPassword;
+        private String msg;
+        private String regId;
+
+        private UsersApi regUser = null;
+        private GoogleCloudMessaging gcm;
+        private Context context;
+
+        private static final String SENDER_ID = "564533837615";
+
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -352,24 +380,36 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+            if (regUser==null){
+                UsersApi.Builder builder = new UsersApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regUser = builder.build();
+            }
+
 
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(context);
+                }
+                regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+
+
+
+
+
+
+                if(regUser.getUsersByEmail(mEmail, mPassword).execute()==null){
+                    return false;
+                }
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
             return true;
         }
 
@@ -379,6 +419,15 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             showProgress(false);
 
             if (success) {
+
+                SharedPreferences userDetails = context.getSharedPreferences("userdetails", MODE_PRIVATE);
+                SharedPreferences.Editor edit = userDetails.edit();
+                edit.clear();
+                edit.putString("userId", regId);
+                edit.putString("username", mEmail);
+                edit.putString("password", mPassword);
+                edit.commit();
+
                 Intent i = new Intent(login,ActionBarTabActivity.class);
                 startActivity(i);
                 finish();
@@ -386,6 +435,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }
+
+
         }
 
         @Override

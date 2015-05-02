@@ -1,6 +1,8 @@
 package com.example.joanmarc.runnersranking;
 
 import java.io.Serializable;
+import java.sql.Time;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -48,3 +50,5 @@ public class User implements Serializable {
         this.routes = routes;
     }
 }
+
+

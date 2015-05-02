@@ -52,8 +52,18 @@
 
                 <Button android:id="@+id/email_sign_in_button" style="?android:textAppearanceSmall"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp" android:text="@string/action_sign_in"
+                    android:layout_marginTop="16dp" android:text="SIGN IN"
                     android:textStyle="bold" />
+
+                <Button
+                    style="?android:textAppearanceSmall"
+                    android:id="@+id/register"
+                    android:layout_width="255dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="REGISTER"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_horizontal" />
 
             </LinearLayout>
         </LinearLayout>

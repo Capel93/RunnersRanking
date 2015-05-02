@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 //import android.app.Fragment;
 import android.util.Log;
@@ -22,11 +23,19 @@ import android.widget.TextView;
 import android.support.v4.app.Fragment;
 import android.widget.Toast;
 
+import com.example.joanmarc.myapplication.backend.routeApi.RouteApi;
+import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
 
 import com.example.joanmarc.runnersranking.dummy.DummyContent;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
+import com.google.api.client.util.DateTime;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.zip.Inflater;
 
 /**
@@ -106,9 +115,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         routes = new ArrayList<>();
-        routes.add(new Route(new Date(2015,2,12)));
-        routes.add(new Route(new Date(2015,5,12)));
-        routes.add(new Route(new Date(2015,4,12)));
+
         adapter = new ItemAdapter(getActivity(),routes);
 
 
@@ -233,7 +240,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
             pos = position;
             if(convertView==null)
-                Log.d("eooeoeoeoeo","eoeoeooeoeo");
+
                 inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 vi = inflater.inflate(R.layout.item_history, null);
 
@@ -276,4 +283,57 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             return true;
         }
     }
+
+
+    public class ListRoutesAsyncTask extends AsyncTask<Void,Void,List<Route>>{
+
+        private RouteApi regRoute = null;
+        private GoogleCloudMessaging gcm;
+        private Context context;
+
+        private static final String SENDER_ID = "564533837615";
+
+        @Override
+        protected List<Route> doInBackground(Void... params) {
+            if (regRoute==null){
+                RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regRoute = builder.build();
+            }
+
+            String msg = "";
+            try {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(context);
+                }
+                String regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+
+
+
+
+
+
+
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
+
+            }
+
+            return null;
+        }
+
+        public ListRoutesAsyncTask(Context context) {
+            this.context=context;
+        }
+
+        @Override
+        protected void onPostExecute(List<Route> routes) {
+
+        }
+    }
+
 }

@@ -16,8 +16,9 @@ public class Route {
     private Date date;
     private double distance;
     private double calories;
-    private double[] rates;
-    private Polyline route;
+    private List<Double> rates;
+    //private Polyline route;
+    private List<Double[]> polylines;
 
     public Route(Date date) {
         this.date = date;
@@ -71,11 +72,19 @@ public class Route {
         this.calories = calories;
     }
 
-    public double[] getRates() {
+    public List<Double> getRates() {
         return rates;
     }
 
-    public void setRates(double[] rates) {
+    public void setRates(List<Double> rates) {
         this.rates = rates;
+    }
+
+    public List<Double[]> getPolylines() {
+        return polylines;
+    }
+
+    public void setPolylines(List<Double[]> polylines) {
+        this.polylines = polylines;
     }
 }

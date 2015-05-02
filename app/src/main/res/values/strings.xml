@@ -34,5 +34,6 @@
         <item>Time</item>
     </string-array>
     <string name="add_friend">Add friend</string>
+    <string name="title_activity_register">RegisterActivity</string>
 
 </resources>

@@ -13,11 +13,13 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +28,16 @@ import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
+
+import com.example.joanmarc.myapplication.backend.routeApi.RouteApi;
+
+import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
+import com.example.joanmarc.myapplication.backend.routeApi.model.Time;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 //import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -40,6 +49,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
+import com.google.api.client.util.DateTime;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -183,6 +200,7 @@ public class NewRouteFragment extends Fragment {
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                             public void onClick(DialogInterface arg0, int arg1) {
+
                                 new AlertDialog.Builder(getActivity())
                                         .setTitle("Reto")
                                         .setMessage("Quiere retar a algun amigo?")
@@ -349,6 +367,98 @@ public class NewRouteFragment extends Fragment {
         route = new PolylineOptions().geodesic(true);
         Polyline line = mMap.addPolyline(route);
 
+    }
+
+    public class RouteAddTask extends AsyncTask<Void, Void, Boolean> {
+
+        private String startPoint;
+        private String finishPoint;
+        private Time time;
+        private Date date;
+        private double distance;
+        private double calories;
+        private List<Double> rates;
+        private List<double[]> route;
+
+        private RouteApi regRoute = null;
+        private GoogleCloudMessaging gcm;
+        private Context context;
+
+        // TODO: change to your own sender ID to Google Developers Console project number, as per instructions above
+        private static final String SENDER_ID = "564533837615";
+
+
+        public RouteAddTask(Context context, String startPoint,
+                            String finishPoint, Time time, Date date,
+                            double distance, double calories, List<Double> rates,
+                            List<double[]> route) {
+            this.startPoint = startPoint;
+            this.finishPoint = finishPoint;
+            this.time = time;
+            this.date = date;
+            this.distance = distance;
+            this.calories = calories;
+            this.rates = rates;
+            this.route = route;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            if (regRoute==null){
+                RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regRoute = builder.build();
+            }
+
+            String msg = "";
+            try {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(context);
+                }
+                String regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+
+                Route route = new Route();
+                route.setStartPoint(startPoint);
+                route.setFinishPoint(finishPoint);
+                route.setDistance(distance);
+                route.setCalories(calories);
+                route.setDate(new DateTime(date.getTime()));
+
+
+
+                route.setTime(time);
+
+
+
+
+
+                /*if(regRoute.insert(route).execute()==null){
+                    return false;
+                }*/
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+
+            if (aBoolean){
+                Toast.makeText(context, "User created succesfully", Toast.LENGTH_LONG);
+
+            }else{
+                Toast.makeText(context,"User with same UserName",Toast.LENGTH_LONG);
+            }
+        }
     }
 
     private final LocationListener locationListener = new LocationListener() {
