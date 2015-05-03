@@ -194,7 +194,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(getApplicationContext(),email, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -365,15 +365,17 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         private final String mPassword;
         private String msg;
         private String regId;
+        private String userName;
 
         private UsersApi regUser = null;
         private GoogleCloudMessaging gcm;
-        private Context context;
+        private Context mcontext;
 
         private static final String SENDER_ID = "564533837615";
 
 
-        UserLoginTask(String email, String password) {
+        public UserLoginTask(Context context,String email, String password) {
+            mcontext=context;
             mEmail = email;
             mPassword = password;
         }
@@ -384,12 +386,13 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 UsersApi.Builder builder = new UsersApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
                         .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
                 regUser = builder.build();
+
             }
 
 
             try {
                 if (gcm == null) {
-                    gcm = GoogleCloudMessaging.getInstance(context);
+                    gcm = GoogleCloudMessaging.getInstance(mcontext);
                 }
                 regId = gcm.register(SENDER_ID);
                 msg = "Device registered, registration ID=" + regId;
@@ -399,11 +402,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
 
 
-
-                if(regUser.getUsersByEmail(mEmail, mPassword).execute()==null){
+                Users u;
+                if((u=regUser.getUsersByEmail(mEmail, mPassword).execute())==null){
                     return false;
                 }
-
+                userName=u.getUserName();
             } catch (IOException ex) {
                 ex.printStackTrace();
                 msg = "Error: " + ex.getMessage();
@@ -420,11 +423,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
             if (success) {
 
-                SharedPreferences userDetails = context.getSharedPreferences("userdetails", MODE_PRIVATE);
+                SharedPreferences userDetails = mcontext.getSharedPreferences("userdetails", MODE_PRIVATE);
                 SharedPreferences.Editor edit = userDetails.edit();
                 edit.clear();
                 edit.putString("userId", regId);
-                edit.putString("username", mEmail);
+                edit.putString("userName", userName);
                 edit.putString("password", mPassword);
                 edit.commit();
 

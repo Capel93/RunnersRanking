@@ -21,6 +21,8 @@ import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -127,9 +129,9 @@ public class RankingFragment extends Fragment {
         //list_global.setAdapter(adapter);
 
         ArrayList<Route> r = new ArrayList<>();
-        r.add(new Route(new Date(2015,2,12)));
+        /*r.add(new Route(new Date(2015,2,12)));
         r.add(new Route(new Date(2015,5,12)));
-        r.add(new Route(new Date(2015,4,12)));
+        r.add(new Route(new Date(2015,4,12)));*/
 
 
         list_global.setAdapter(new ItemAdapter(getActivity(),r));

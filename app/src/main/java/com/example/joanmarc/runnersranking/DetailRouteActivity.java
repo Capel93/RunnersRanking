@@ -1,5 +1,6 @@
 package com.example.joanmarc.runnersranking;
 
+import android.graphics.Color;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v7.app.ActionBarActivity;
@@ -7,6 +8,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.text.Layout;
+
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,9 +21,12 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TabHost;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.widget.TabHost;
@@ -29,21 +34,28 @@ import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DetailRouteActivity extends ActionBarActivity {
 
+
+    public RouteClass route;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_route2);
+        route = (RouteClass) getIntent().getSerializableExtra("route");
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new PlaceholderFragment(route))
                     .commit();
         }
+
+
     }
 
 
@@ -89,8 +101,10 @@ public class DetailRouteActivity extends ActionBarActivity {
         private int mCurrentTab;
         private List<String> items_list;
         private ArrayAdapter<String> adapter;
+        private RouteClass route;
 
-        public PlaceholderFragment() {
+        public PlaceholderFragment(RouteClass route) {
+            this.route=route;
         }
 
         @Override
@@ -104,7 +118,18 @@ public class DetailRouteActivity extends ActionBarActivity {
             mapView.onCreate(savedInstanceState);
             mapView.onResume();
             mMap = mapView.getMap();
+            mMap.setMyLocationEnabled(true);
 
+            PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+            LatLng point = new LatLng(0,0);
+            for (int i = 0; i < route.getLongitudes().size(); i++) {
+                point = new LatLng(route.getLatitudes().get(i),route.getLongitudes().get(i));
+
+                options.add(point);
+                mMap.addMarker(new MarkerOptions().position(point));
+            }
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 14));
+            mMap.addPolyline(options);
 
             MapsInitializer.initialize(this.getActivity());
 
@@ -116,6 +141,10 @@ public class DetailRouteActivity extends ActionBarActivity {
             ListView list_rate = (ListView) rootView.findViewById(R.id.listView);
             TextView tv_calories = (TextView) rootView.findViewById(R.id.textView3);
             TextView tv_calories2 = (TextView) rootView.findViewById(R.id.textView4);
+            TextView dist = (TextView) rootView.findViewById(R.id.textView2);
+            TextView time = (TextView) rootView.findViewById(R.id.textView);
+            Time t = new Time(route.getTime());
+            time.setText(t.toString());
             tabHost.setup();
 
             items_list = new ArrayList<String>();
@@ -139,6 +168,8 @@ public class DetailRouteActivity extends ActionBarActivity {
             calories.setContent(R.id.calories);
             calories.setIndicator("calories");
             tabHost.addTab(calories);
+
+            dist.setText(new Double(route.getDistance()).toString());
 
             tv_calories.setText("Gran treball!! Has cremat .... ");
             tv_calories2.setText("Has de correr més. GORDAKOO");

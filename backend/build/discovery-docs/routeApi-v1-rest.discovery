@@ -1,6 +1,6 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/doafxFMf_XYfm_NLydHkEVnWm4c\"",
+ "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/rhY-ibwGgDzxoAjIRkftIbiyhkM\"",
  "discoveryVersion": "v1",
  "id": "routeApi:v1",
  "name": "routeApi",
@@ -73,6 +73,21 @@
   }
  },
  "schemas": {
+  "CollectionResponse_Route": {
+   "id": "CollectionResponse_Route",
+   "type": "object",
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Route"
+     }
+    },
+    "nextPageToken": {
+     "type": "string"
+    }
+   }
+  },
   "Route": {
    "id": "Route",
    "type": "object",
@@ -92,63 +107,52 @@
     "finishPoint": {
      "type": "string"
     },
-    "route": {
+    "id": {
+     "type": "string",
+     "format": "int64"
+    },
+    "latitudes": {
      "type": "array",
      "items": {
-      "type": "array",
-      "items": {
-       "type": "number",
-       "format": "double"
-      }
+      "type": "number",
+      "format": "double"
+     }
+    },
+    "longitudes": {
+     "type": "array",
+     "items": {
+      "type": "number",
+      "format": "double"
+     }
+    },
+    "rates": {
+     "type": "array",
+     "items": {
+      "type": "number",
+      "format": "double"
      }
     },
     "startPoint": {
      "type": "string"
     },
     "time": {
-     "$ref": "Time"
-    }
-   }
-  },
-  "Time": {
-   "id": "Time",
-   "type": "object",
-   "properties": {
-    "date": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "day": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "hours": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "minutes": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "month": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "seconds": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "time": {
      "type": "string",
      "format": "int64"
     },
-    "timezoneOffset": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "year": {
-     "type": "integer",
-     "format": "int32"
+    "userName": {
+     "type": "string"
+    }
+   }
+  },
+  "RouteCollection": {
+   "id": "RouteCollection",
+   "type": "object",
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Route"
+     }
     }
    }
   }
@@ -186,6 +190,62 @@
    },
    "response": {
     "$ref": "Route"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "listRouteByUser": {
+   "id": "routeApi.listRouteByUser",
+   "path": "listRoutesByUser",
+   "httpMethod": "GET",
+   "parameters": {
+    "count": {
+     "type": "integer",
+     "required": true,
+     "format": "int32",
+     "location": "query"
+    },
+    "userName": {
+     "type": "string",
+     "required": true,
+     "location": "query"
+    }
+   },
+   "parameterOrder": [
+    "count",
+    "userName"
+   ],
+   "response": {
+    "$ref": "CollectionResponse_Route"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "listRoutes": {
+   "id": "routeApi.listRoutes",
+   "path": "listRoutes",
+   "httpMethod": "GET",
+   "parameters": {
+    "count": {
+     "type": "integer",
+     "required": true,
+     "format": "int32",
+     "location": "query"
+    },
+    "userName": {
+     "type": "string",
+     "required": true,
+     "location": "query"
+    }
+   },
+   "parameterOrder": [
+    "count",
+    "userName"
+   ],
+   "response": {
+    "$ref": "RouteCollection"
    },
    "scopes": [
     "https://www.googleapis.com/auth/userinfo.email"

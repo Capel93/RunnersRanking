@@ -12,7 +12,7 @@ public class User implements Serializable {
     private String name;
     private String userName;
     private List<User> friends;
-    private List<Route> routes;
+    private List<RouteClass> routes;
 
     public User(String userName) {
         this.userName = userName;
@@ -42,11 +42,11 @@ public class User implements Serializable {
         this.friends = friends;
     }
 
-    public List<Route> getRoutes() {
+    public List<RouteClass> getRoutes() {
         return routes;
     }
 
-    public void setRoutes(List<Route> routes) {
+    public void setRoutes(List<RouteClass> routes) {
         this.routes = routes;
     }
 }

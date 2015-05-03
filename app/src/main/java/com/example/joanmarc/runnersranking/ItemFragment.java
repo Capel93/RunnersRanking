@@ -4,10 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 //import android.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,27 +17,21 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v4.app.Fragment;
-import android.widget.Toast;
 
 import com.example.joanmarc.myapplication.backend.routeApi.RouteApi;
+import com.example.joanmarc.myapplication.backend.routeApi.model.CollectionResponseRoute;
 import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
 
 import com.example.joanmarc.runnersranking.dummy.DummyContent;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.util.DateTime;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.zip.Inflater;
 
 /**
  * A fragment representing a list of Items.
@@ -58,10 +53,11 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     private String mParam1;
     private String mParam2;
 
-    private ArrayList<Route> routes;
+    private ArrayList<Route> routes = new ArrayList<>();
     private OnFragmentInteractionListener mListener;
     private ItemAdapter adapter;
     private ItemFragment itemFragment;
+    private Context mContext;
 
 
     /**
@@ -104,7 +100,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         // TODO: Change Adapter to display your content
         mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+        new ListRoutesAsyncTask(getActivity()).execute();
         itemFragment = this;
+
+        mContext=getActivity();
+
+
     }
 
     @Override
@@ -114,39 +115,9 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
 
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        routes = new ArrayList<>();
-
-        adapter = new ItemAdapter(getActivity(),routes);
-
-
-        // Set the adapter
-        mListView.setAdapter(adapter);
 
 
 
-        // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setFocusable(true);
-        mListView.setOnItemClickListener(this);
-
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("Really Delete?")
-                        .setMessage("Are you sure you want to delete this route?")
-                        .setNegativeButton(android.R.string.no, null)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        routes.remove(position);
-                                        adapter.notifyDataSetChanged();
-                                    }
-                                }
-                        ).create().show();
-
-                return false;
-            }
-        });
         return view;
     }
 
@@ -249,15 +220,21 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             TextView duration = (TextView)vi.findViewById(R.id.duration); // duration
             ImageButton profile_image=(ImageButton)vi.findViewById(R.id.list_image); // profile image
             Route r = routes.get(position);
-            date.setText(r.getDate().toString());
-            //duration.setText(r.getDate());
+            title.setText(r.getStartPoint()+" - "+r.getFinishPoint());
+            //date.setText(r.getDate().toString());
+            date.setText(r.getDistance().toString()+"m");
 
-            vi.setOnClickListener(new View.OnClickListener() {
+            //duration.setText(r.getTime().getMinutes()+":"+r.getTime().getSeconds());
+
+            View.OnClickListener list = new onClickRoute(r);
+            /*vi.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListener.onFragmentInteraction(""+pos);
+
+                    startActivity(new Intent(mContext,DetailRouteActivity.class));
                 }
-            });
+            });*/
+            vi.setOnClickListener(list);
 
 
 
@@ -284,8 +261,27 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
+    public class onClickRoute implements View.OnClickListener{
 
-    public class ListRoutesAsyncTask extends AsyncTask<Void,Void,List<Route>>{
+        private Route route;
+
+        public onClickRoute(Route r){
+            this.route=r;
+        }
+
+        @Override
+        public void onClick(View v) {
+
+            Intent i = new Intent(mContext,DetailRouteActivity.class);
+
+            RouteClass routeClass = new RouteClass(route);
+            i.putExtra("route",routeClass);
+
+            startActivity(i);
+        }
+    }
+
+    public class ListRoutesAsyncTask extends AsyncTask<Void, Void, CollectionResponseRoute> {
 
         private RouteApi regRoute = null;
         private GoogleCloudMessaging gcm;
@@ -294,7 +290,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         private static final String SENDER_ID = "564533837615";
 
         @Override
-        protected List<Route> doInBackground(Void... params) {
+        protected CollectionResponseRoute doInBackground(Void... params) {
             if (regRoute==null){
                 RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
                         .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
@@ -310,7 +306,21 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                 msg = "Device registered, registration ID=" + regId;
 
 
+                SharedPreferences userDetails = context.getSharedPreferences("userdetails", context.MODE_PRIVATE);
 
+
+                //return regUser.listUserRoutes(10,regId).execute().getItems();
+                String userName;
+                if (userDetails.contains("userName")){
+                    userName = userDetails.getString("userName","");
+                }else{
+                    userName  ="dev";
+                }
+
+
+
+
+                return  regRoute.listRouteByUser(5,userName).execute();
 
 
 
@@ -331,7 +341,49 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
 
         @Override
-        protected void onPostExecute(List<Route> routes) {
+        protected void onPostExecute(CollectionResponseRoute rts) {
+
+            if (rts==null){
+
+            }else {
+
+                try {
+                    routes = new ArrayList<>(rts.getItems());
+                }catch (NullPointerException n){
+                    routes = new ArrayList<>();
+                }
+
+                adapter = new ItemAdapter(getActivity(), routes);
+
+
+                // Set the adapter
+                mListView.setAdapter(adapter);
+
+
+                // Set OnItemClickListener so we can be notified on item clicks
+                mListView.setFocusable(true);
+                //mListView.setOnItemClickListener(this);
+
+                mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Really Delete?")
+                                .setMessage("Are you sure you want to delete this route?")
+                                .setNegativeButton(android.R.string.no, null)
+                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                routes.remove(position);
+                                                adapter.notifyDataSetChanged();
+                                            }
+                                        }
+                                ).create().show();
+
+                        return false;
+                    }
+                });
+            }
 
         }
     }

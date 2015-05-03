@@ -1,6 +1,6 @@
 {
  "kind": "discovery#rpcDescription",
- "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/UyHFgF5L_P9RdJHFmGiF1g6Kv4E\"",
+ "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/yEy_dXMB6e9Z620NQ9iOC2mXSTA\"",
  "discoveryVersion": "v1",
  "id": "usersApi:v1",
  "name": "usersApi",
@@ -90,63 +90,52 @@
     "finishPoint": {
      "type": "string"
     },
-    "route": {
+    "id": {
+     "type": "string",
+     "format": "int64"
+    },
+    "latitudes": {
      "type": "array",
      "items": {
-      "type": "array",
-      "items": {
-       "type": "number",
-       "format": "double"
-      }
+      "type": "number",
+      "format": "double"
+     }
+    },
+    "longitudes": {
+     "type": "array",
+     "items": {
+      "type": "number",
+      "format": "double"
+     }
+    },
+    "rates": {
+     "type": "array",
+     "items": {
+      "type": "number",
+      "format": "double"
      }
     },
     "startPoint": {
      "type": "string"
     },
     "time": {
-     "$ref": "Time"
-    }
-   }
-  },
-  "Time": {
-   "id": "Time",
-   "type": "object",
-   "properties": {
-    "date": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "day": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "hours": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "minutes": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "month": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "seconds": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "time": {
      "type": "string",
      "format": "int64"
     },
-    "timezoneOffset": {
-     "type": "integer",
-     "format": "int32"
-    },
-    "year": {
-     "type": "integer",
-     "format": "int32"
+    "userName": {
+     "type": "string"
+    }
+   }
+  },
+  "RouteCollection": {
+   "id": "RouteCollection",
+   "type": "object",
+   "properties": {
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Route"
+     }
     }
    }
   },
@@ -160,8 +149,12 @@
     "friends": {
      "type": "array",
      "items": {
-      "$ref": "Users"
+      "type": "string"
      }
+    },
+    "id": {
+     "type": "string",
+     "format": "int64"
     },
     "password": {
      "type": "string"
@@ -172,8 +165,12 @@
     "routes": {
      "type": "array",
      "items": {
-      "$ref": "Route"
+      "type": "string",
+      "format": "int64"
      }
+    },
+    "userId": {
+     "type": "string"
     },
     "userName": {
      "type": "string"
@@ -228,6 +225,30 @@
     "https://www.googleapis.com/auth/userinfo.email"
    ]
   },
+  "usersApi.insertUserRoute": {
+   "id": "usersApi.insertUserRoute",
+   "parameters": {
+    "routeId": {
+     "type": "string",
+     "required": true,
+     "format": "int64"
+    },
+    "userName": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "userName",
+    "routeId"
+   ],
+   "returns": {
+    "$ref": "Users"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
   "usersApi.insertUsers": {
    "id": "usersApi.insertUsers",
    "parameters": {
@@ -240,6 +261,31 @@
    ],
    "returns": {
     "$ref": "Users"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "usersApi.listUserRoutes": {
+   "id": "usersApi.listUserRoutes",
+   "allowGet": true,
+   "parameters": {
+    "count": {
+     "type": "integer",
+     "required": true,
+     "format": "int32"
+    },
+    "userId": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "count",
+    "userId"
+   ],
+   "returns": {
+    "$ref": "RouteCollection"
    },
    "scopes": [
     "https://www.googleapis.com/auth/userinfo.email"

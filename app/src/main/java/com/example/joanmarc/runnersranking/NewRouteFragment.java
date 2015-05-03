@@ -6,6 +6,7 @@ import android.content.Context;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Criteria;
@@ -33,8 +34,14 @@ import android.widget.Toast;
 import com.example.joanmarc.myapplication.backend.routeApi.RouteApi;
 
 import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
-import com.example.joanmarc.myapplication.backend.routeApi.model.Time;
 
+
+
+
+
+
+import com.example.joanmarc.myapplication.backend.usersApi.UsersApi;
+import com.example.joanmarc.myapplication.backend.usersApi.model.Users;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 //import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -89,8 +96,19 @@ public class NewRouteFragment extends Fragment {
     private Location loc = null;
     private LocationManager locationManager;
     private Criteria crta;
-    private long time;
+    private Polyline polyRoute;
+    private boolean restart = false;
+    private long timeWhenStopped=0;
 
+    private String startPoint;
+    private String finishPoint;
+    private long time;
+    private Date date;
+    private double distance;
+    private double calories;
+    private List<Double> rates;
+    private List<Double> longitudes;
+    private List<Double> latitudes;
 
     /**
      * Use this factory method to create a new instance of
@@ -163,16 +181,26 @@ public class NewRouteFragment extends Fragment {
 
                 if (startRoute) {
                     chronometer.stop();
-
+                    restart = true;
+                    timeWhenStopped = chronometer.getBase() - SystemClock.elapsedRealtime();
                     startRoute = false;
                     start.setText("Iniciar");
                     start.setBackgroundColor(0xffa1ccff);
 
                 } else {
 
+                    if (restart){
+                        chronometer.setBase(SystemClock.elapsedRealtime()+timeWhenStopped);
+                    }else{
+                        chronometer.setBase(SystemClock.elapsedRealtime());
+                    }
 
                     chronometer.start();
                     startRoute = true;
+
+                    date = new Date();
+
+
 
                     start.setText("Pausa");
                     start.setBackgroundColor(0xFFFFFB7A);
@@ -185,8 +213,16 @@ public class NewRouteFragment extends Fragment {
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 chronometer.stop();
+                time=chronometer.getBase();
+
                 startRoute=false;
+                startPoint="vallfo";
+                finishPoint="torre";
+                longitudes = polylineToListLongitudes(route.getPoints());
+                latitudes = polylineToListLatitudes(route.getPoints());
+                distance = calcDistance(route.getPoints());
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Guardar activitad")
                         .setMessage("Quiere guardar esta nueva actividad?")
@@ -201,13 +237,18 @@ public class NewRouteFragment extends Fragment {
 
                             public void onClick(DialogInterface arg0, int arg1) {
 
+                                new RouteAddAsyncTask(myContext,startPoint,finishPoint,time,date,distance,calories,rates,longitudes,latitudes).execute();
+
+
                                 new AlertDialog.Builder(getActivity())
                                         .setTitle("Reto")
                                         .setMessage("Quiere retar a algun amigo?")
                                         .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
 
                                             public void onClick(DialogInterface arg0, int arg1) {
-                                                NewRouteFragment.newInstance();
+
+
+
 
                                             }
                                         })
@@ -357,6 +398,10 @@ public class NewRouteFragment extends Fragment {
 
         }
 
+        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, locationListener);
+        }
 
         if (loc!=null){
             Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
@@ -365,22 +410,23 @@ public class NewRouteFragment extends Fragment {
         }
 
         route = new PolylineOptions().geodesic(true);
-        Polyline line = mMap.addPolyline(route);
+        //Polyline line = mMap.addPolyline(route);
 
     }
 
-    public class RouteAddTask extends AsyncTask<Void, Void, Boolean> {
+    public class RouteAddAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
         private String startPoint;
         private String finishPoint;
-        private Time time;
+        private long time;
         private Date date;
         private double distance;
         private double calories;
         private List<Double> rates;
-        private List<double[]> route;
+        private List<List<Double>> routes;
 
         private RouteApi regRoute = null;
+        private UsersApi regUser =  null;
         private GoogleCloudMessaging gcm;
         private Context context;
 
@@ -388,10 +434,11 @@ public class NewRouteFragment extends Fragment {
         private static final String SENDER_ID = "564533837615";
 
 
-        public RouteAddTask(Context context, String startPoint,
-                            String finishPoint, Time time, Date date,
+        public RouteAddAsyncTask(Context context, String startPoint,
+                            String finishPoint, long time, Date date,
                             double distance, double calories, List<Double> rates,
-                            List<double[]> route) {
+                                 List<Double> longitudes,List<Double> latitudes) {
+            this.context=context;
             this.startPoint = startPoint;
             this.finishPoint = finishPoint;
             this.time = time;
@@ -399,7 +446,7 @@ public class NewRouteFragment extends Fragment {
             this.distance = distance;
             this.calories = calories;
             this.rates = rates;
-            this.route = route;
+            this.routes = routes;
         }
 
         @Override
@@ -409,6 +456,11 @@ public class NewRouteFragment extends Fragment {
                 RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
                         .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
                 regRoute = builder.build();
+            }
+            if (regUser==null){
+                UsersApi.Builder builder = new UsersApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regUser = builder.build();
             }
 
             String msg = "";
@@ -420,24 +472,34 @@ public class NewRouteFragment extends Fragment {
                 msg = "Device registered, registration ID=" + regId;
 
 
+                SharedPreferences userDetails = context.getSharedPreferences("userdetails", context.MODE_PRIVATE);
+
                 Route route = new Route();
                 route.setStartPoint(startPoint);
                 route.setFinishPoint(finishPoint);
+                route.setUserName(userDetails.getString("userName", ""));
                 route.setDistance(distance);
                 route.setCalories(calories);
-                route.setDate(new DateTime(date.getTime()));
-
-
-
+                route.setDate(new DateTime(date));
                 route.setTime(time);
+                route.setLongitudes(longitudes);
+                route.setLatitudes(latitudes);
+                //route.setRates(rates);
 
 
 
 
 
-                /*if(regRoute.insert(route).execute()==null){
+                Route r;
+                if((r=regRoute.insertRoute(route).execute())==null){
                     return false;
-                }*/
+                }
+
+
+                Users u;
+                if((u=regUser.insertUserRoute(userDetails.getString("userName",""),r.getId()).execute())==null){
+                    return false;
+                }
 
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -453,10 +515,11 @@ public class NewRouteFragment extends Fragment {
             super.onPostExecute(aBoolean);
 
             if (aBoolean){
-                Toast.makeText(context, "User created succesfully", Toast.LENGTH_LONG);
+                Toast.makeText(context, "Route add succesfully", Toast.LENGTH_LONG);
+                NewRouteFragment.newInstance();
 
             }else{
-                Toast.makeText(context,"User with same UserName",Toast.LENGTH_LONG);
+                Toast.makeText(context,"Error on add route",Toast.LENGTH_LONG);
             }
         }
     }
@@ -473,7 +536,8 @@ public class NewRouteFragment extends Fragment {
             if (startRoute) {
                 route.add(new LatLng(location.getLatitude(), location.getLongitude()));
 
-                Polyline line = mMap.addPolyline(route);
+
+                //Polyline line = mMap.addPolyline(route);
             }
 
 
@@ -492,4 +556,42 @@ public class NewRouteFragment extends Fragment {
         public void onStatusChanged(String provider, int status, Bundle extras) {
         }
     };
+
+    private List<Double> polylineToListLongitudes(List<LatLng> poly){
+
+
+            List<Double> longitude = new ArrayList<>();
+
+            for (LatLng latLng : poly) {
+                longitude.add(latLng.longitude);
+            }
+
+            return longitude;
+    }
+    private List<Double> polylineToListLatitudes(List<LatLng> poly) {
+
+
+        List<Double> latitudes = new ArrayList<>();
+
+        for (LatLng latLng : poly) {
+            latitudes.add(latLng.latitude);
+        }
+
+        return latitudes;
+
+    }
+    private double calcDistance(List<LatLng> poly){
+
+        float[] results = new float[1];
+        LatLng lastPos = poly.get(0);
+        double distance=0.0;
+        for (LatLng pos: poly){
+            Location.distanceBetween(lastPos.latitude, lastPos.longitude,
+                    pos.latitude, pos.longitude, results);
+            distance = distance + results[0];
+            lastPos=pos;
+        }
+
+        return distance;
+    }
 }
