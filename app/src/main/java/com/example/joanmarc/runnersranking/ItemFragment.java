@@ -31,7 +31,10 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * A fragment representing a list of Items.
@@ -220,9 +223,12 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
             TextView duration = (TextView)vi.findViewById(R.id.duration); // duration
             ImageButton profile_image=(ImageButton)vi.findViewById(R.id.list_image); // profile image
             Route r = routes.get(position);
-            title.setText(r.getStartPoint()+" - "+r.getFinishPoint());
-            //date.setText(r.getDate().toString());
-            date.setText(r.getDistance().toString()+"m");
+            title.setText(r.getDate().toString());
+            Time t = new Time(r.getTime());
+            String sTime = t.toString();
+            date.setText("Time: "+sTime.substring(3));
+            duration.setText(new Long(Math.round(r.getDistance())).toString()+"m");
+            duration.setTextSize(12);
 
             //duration.setText(r.getTime().getMinutes()+":"+r.getTime().getSeconds());
 
@@ -353,6 +359,20 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                     routes = new ArrayList<>();
                 }
 
+                Collections.sort(routes, new Comparator<Route>() {
+                            @Override
+                            public int compare(Route lhs, Route rhs) {
+                                return new Long(lhs.getDate().getValue()).compareTo(new Long(rhs.getDate().getValue()));
+                            }
+                        }
+                );
+                Collections.sort(routes, new Comparator<Route>() {
+                            @Override
+                            public int compare(Route lhs, Route rhs) {
+                                return new Long(lhs.getDate().getValue()).compareTo(new Long(rhs.getDate().getValue()));
+                            }
+                        }
+                );
                 adapter = new ItemAdapter(getActivity(), routes);
 
 

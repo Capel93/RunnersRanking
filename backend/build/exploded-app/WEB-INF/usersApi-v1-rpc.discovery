@@ -1,6 +1,6 @@
 {
  "kind": "discovery#rpcDescription",
- "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/yEy_dXMB6e9Z620NQ9iOC2mXSTA\"",
+ "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/SaAC3NhFVx69IXHnQTE3Lw1EIYs\"",
  "discoveryVersion": "v1",
  "id": "usersApi:v1",
  "name": "usersApi",
@@ -217,6 +217,29 @@
    "parameterOrder": [
     "email",
     "password"
+   ],
+   "returns": {
+    "$ref": "Users"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "usersApi.insertFriend": {
+   "id": "usersApi.insertFriend",
+   "parameters": {
+    "userName": {
+     "type": "string",
+     "required": true
+    },
+    "userNameFriend": {
+     "type": "string",
+     "required": true
+    }
+   },
+   "parameterOrder": [
+    "userName",
+    "userNameFriend"
    ],
    "returns": {
     "$ref": "Users"

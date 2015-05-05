@@ -2,6 +2,7 @@ package com.example.joanmarc.runnersranking;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Service;
 import android.content.Context;
 
 import android.content.DialogInterface;
@@ -16,7 +17,9 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -99,6 +102,7 @@ public class NewRouteFragment extends Fragment {
     private Polyline polyRoute;
     private boolean restart = false;
     private long timeWhenStopped=0;
+    private long elapsedTime;
 
     private String startPoint;
     private String finishPoint;
@@ -160,9 +164,10 @@ public class NewRouteFragment extends Fragment {
         //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 
         if (mMap != null) {
-
+            route=new PolylineOptions().geodesic(true);
             setUpMap();
         }
+
 
 
         //Chronometer
@@ -186,13 +191,16 @@ public class NewRouteFragment extends Fragment {
                     startRoute = false;
                     start.setText("Iniciar");
                     start.setBackgroundColor(0xffa1ccff);
+                    //elapsedTime = SystemClock.elapsedRealtime()-elapsedTime;
 
                 } else {
 
                     if (restart){
                         chronometer.setBase(SystemClock.elapsedRealtime()+timeWhenStopped);
+                        elapsedTime = elapsedTime - timeWhenStopped;
                     }else{
                         chronometer.setBase(SystemClock.elapsedRealtime());
+                        elapsedTime = SystemClock.elapsedRealtime();
                     }
 
                     chronometer.start();
@@ -215,11 +223,12 @@ public class NewRouteFragment extends Fragment {
             public void onClick(View v) {
 
                 chronometer.stop();
-                time=chronometer.getBase();
-
+                //time=SystemClock.elapsedRealtime()-chronometer.getBase();
+                time = chronometer.getBase()-SystemClock.elapsedRealtime();
+                time=time*-1;
                 startRoute=false;
-                startPoint="vallfo";
-                finishPoint="torre";
+                startPoint="";
+                finishPoint="";
                 longitudes = polylineToListLongitudes(route.getPoints());
                 latitudes = polylineToListLatitudes(route.getPoints());
                 distance = calcDistance(route.getPoints());
@@ -365,6 +374,7 @@ public class NewRouteFragment extends Fragment {
         String context = Context.LOCATION_SERVICE;
         locationManager = (LocationManager) myContext.getSystemService(context);
 
+        Location loc;
         crta = new Criteria();
         crta.setAccuracy(Criteria.ACCURACY_FINE);
         crta.setAltitudeRequired(false);
@@ -372,10 +382,34 @@ public class NewRouteFragment extends Fragment {
         crta.setCostAllowed(true);
         crta.setPowerRequirement(Criteria.POWER_LOW);
 
+        route = new PolylineOptions().geodesic(true);
 
         if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            /*loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,2000,0,locationListener);
+            if (loc!=null){
+                locationListener.onLocationChanged(loc);
+                Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(loc.getLatitude(), loc.getLongitude()), 14));
+                route.add(new LatLng(loc.getLatitude(), loc.getLongitude()));
+                mMap.addPolyline(route);
+            }*/
+
+            locationManager =
+                    (LocationManager)myContext.getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0,locationListener);
+            loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (loc!=null){
+                //locationListener.onLocationChanged(loc);
+                Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(loc.getLatitude(), loc.getLongitude()), 14));
+                route.add(new LatLng(loc.getLatitude(), loc.getLongitude()));
+                mMap.addPolyline(route);
+            }
+
         }else{
             new AlertDialog.Builder(getActivity())
                     .setTitle("GPS service")
@@ -384,33 +418,46 @@ public class NewRouteFragment extends Fragment {
 
                         public void onClick(DialogInterface arg0, int arg1) {
 
-                            provider = locationManager.getBestProvider(crta, true);
+                            /*provider = locationManager.getBestProvider(crta, true);
                             loc = locationManager.getLastKnownLocation(provider);
                             locationManager.requestLocationUpdates(provider,1000,0,locationListener);
+                            if (loc!=null){
+                                Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                        new LatLng(loc.getLatitude(), loc.getLongitude()), 14));
+                                route.add(new LatLng(loc.getLatitude(), loc.getLongitude()));
+                                mMap.addPolyline(route);
+                            }*/
                         }
                     })
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                         public void onClick(DialogInterface arg0, int arg1) {
                             startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            /*if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                                loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, locationListener);
+                            }
+                            if (loc!=null){
+                                Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                        new LatLng(loc.getLatitude(), loc.getLongitude()), 14));
+                                route.add(new LatLng(loc.getLatitude(), loc.getLongitude()));
+                                mMap.addPolyline(route);
+                            }*/
+                            locationManager =
+                                    (LocationManager)myContext.getSystemService(Context.LOCATION_SERVICE);
+                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0,locationListener);
+                            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                         }
                     }).create().show();
 
         }
 
-        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, locationListener);
-        }
 
-        if (loc!=null){
-            Log.d("Posicioooooooooo",loc.getLatitude()+":"+loc.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(loc.getLatitude(), loc.getLongitude()), 14));
-        }
 
-        route = new PolylineOptions().geodesic(true);
-        //Polyline line = mMap.addPolyline(route);
+
+
 
     }
 
@@ -537,7 +584,7 @@ public class NewRouteFragment extends Fragment {
                 route.add(new LatLng(location.getLatitude(), location.getLongitude()));
 
 
-                //Polyline line = mMap.addPolyline(route);
+                mMap.addPolyline(route);
             }
 
 
@@ -583,15 +630,23 @@ public class NewRouteFragment extends Fragment {
     private double calcDistance(List<LatLng> poly){
 
         float[] results = new float[1];
-        LatLng lastPos = poly.get(0);
-        double distance=0.0;
-        for (LatLng pos: poly){
-            Location.distanceBetween(lastPos.latitude, lastPos.longitude,
-                    pos.latitude, pos.longitude, results);
-            distance = distance + results[0];
-            lastPos=pos;
+        if (poly.size()==0){
+            return 0;
+        }else{
+            LatLng lastPos = poly.get(0);
+            double distance=0.0;
+            for (LatLng pos: poly){
+                Location.distanceBetween(lastPos.latitude, lastPos.longitude,
+                        pos.latitude, pos.longitude, results);
+                distance = distance + results[0];
+                lastPos=pos;
+            }
+
+            return distance;
         }
 
-        return distance;
     }
+
+
+
 }

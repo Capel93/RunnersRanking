@@ -1,6 +1,6 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/yEy_dXMB6e9Z620NQ9iOC2mXSTA\"",
+ "etag": "\"u_zXkMELIlX4ktyNbM2XKD4vK8E/SaAC3NhFVx69IXHnQTE3Lw1EIYs\"",
  "discoveryVersion": "v1",
  "id": "usersApi:v1",
  "name": "usersApi",
@@ -224,6 +224,33 @@
    "parameterOrder": [
     "email",
     "password"
+   ],
+   "response": {
+    "$ref": "Users"
+   },
+   "scopes": [
+    "https://www.googleapis.com/auth/userinfo.email"
+   ]
+  },
+  "insertFriend": {
+   "id": "usersApi.insertFriend",
+   "path": "friend",
+   "httpMethod": "POST",
+   "parameters": {
+    "userName": {
+     "type": "string",
+     "required": true,
+     "location": "query"
+    },
+    "userNameFriend": {
+     "type": "string",
+     "required": true,
+     "location": "query"
+    }
+   },
+   "parameterOrder": [
+    "userName",
+    "userNameFriend"
    ],
    "response": {
     "$ref": "Users"

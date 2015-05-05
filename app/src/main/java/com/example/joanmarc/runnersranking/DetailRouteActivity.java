@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.text.Layout;
 
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +37,7 @@ import android.widget.TextView;
 
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -122,11 +124,15 @@ public class DetailRouteActivity extends ActionBarActivity {
 
             PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
             LatLng point = new LatLng(0,0);
+            mMap.addMarker(new MarkerOptions().position(new LatLng(route.getLatitudes().get(0),route.getLongitudes().get(0))));
+
+            mMap.addMarker(new MarkerOptions().position(new LatLng(route.getLatitudes().get(route.getLongitudes().size()-1),
+                    route.getLongitudes().get(route.getLongitudes().size()-1))));
             for (int i = 0; i < route.getLongitudes().size(); i++) {
                 point = new LatLng(route.getLatitudes().get(i),route.getLongitudes().get(i));
 
                 options.add(point);
-                mMap.addMarker(new MarkerOptions().position(point));
+
             }
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 14));
             mMap.addPolyline(options);
@@ -144,7 +150,10 @@ public class DetailRouteActivity extends ActionBarActivity {
             TextView dist = (TextView) rootView.findViewById(R.id.textView2);
             TextView time = (TextView) rootView.findViewById(R.id.textView);
             Time t = new Time(route.getTime());
-            time.setText(t.toString());
+            String sTime = t.toString();
+            time.setText(sTime.substring(3));
+
+
             tabHost.setup();
 
             items_list = new ArrayList<String>();
@@ -169,7 +178,7 @@ public class DetailRouteActivity extends ActionBarActivity {
             calories.setIndicator("calories");
             tabHost.addTab(calories);
 
-            dist.setText(new Double(route.getDistance()).toString());
+            dist.setText(new Long(Math.round(route.getDistance())).toString());
 
             tv_calories.setText("Gran treball!! Has cremat .... ");
             tv_calories2.setText("Has de correr més. GORDAKOO");

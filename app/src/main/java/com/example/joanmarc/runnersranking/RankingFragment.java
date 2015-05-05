@@ -3,8 +3,9 @@ package com.example.joanmarc.runnersranking;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.DataSetObserver;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,17 +15,26 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.example.joanmarc.myapplication.backend.routeApi.RouteApi;
+import com.example.joanmarc.myapplication.backend.routeApi.model.CollectionResponseRoute;
 import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
+import com.example.joanmarc.myapplication.backend.usersApi.UsersApi;
+import com.example.joanmarc.myapplication.backend.usersApi.model.Users;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -45,10 +55,15 @@ public class RankingFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private Spinner filter;
+    ArrayList<Route> Friendslist;
+    ArrayList<Route> Globallist;
 
     private List<String> items_Globallist;
     private List<String> items_Friendslist;
     private View rootView;
+    private ListView list_global;
+    private ListView list_friends;
 
 
     private OnRankingFragmentInteractionListener mListener;
@@ -91,15 +106,78 @@ public class RankingFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.fragment_ranking, container, false);
 
+        new ListRoutesAsyncTask(getActivity()).execute();
+        new ListFriendRoutesAsyncTask(getActivity()).execute();
+
         //Spinners
         ArrayList spinner_array = new ArrayList<String>();
         spinner_array.add("Distance");
         spinner_array.add("Rate");
         spinner_array.add("Time");
-        Spinner filter = (Spinner) rootView.findViewById(R.id.spinner);
+         filter = (Spinner) rootView.findViewById(R.id.spinner);
         ArrayAdapter arrayAdapter = ArrayAdapter.createFromResource(getActivity(),R.array.select_filter,R.layout.spinner_layout);
         arrayAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         filter.setAdapter(arrayAdapter);
+
+        Button buttonFilter = (Button) rootView.findViewById(R.id.buttonFilter);
+        buttonFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (filter.getSelectedItem().toString()){
+                    case "Distance":
+                        Collections.sort(Friendslist, new Comparator<Route>() {
+                            @Override
+                            public int compare(Route lhs, Route rhs) {
+                                return lhs.getDistance().compareTo(rhs.getDistance());
+                            }
+                        }
+                        );
+                        Collections.sort(Globallist, new Comparator<Route>() {
+                                    @Override
+                                    public int compare(Route lhs, Route rhs) {
+                                        return lhs.getDistance().compareTo(rhs.getDistance());
+                                    }
+                                }
+                        );
+                        break;
+                    case "Rate":
+                        /*Collections.sort(Friendslist, new Comparator<Route>() {
+                                    @Override
+                                    public int compare(Route lhs, Route rhs) {
+                                        return lhs.getDistance().compareTo(rhs.getDistance());
+                                    }
+                                }
+                        );
+                        Collections.sort(Globallist, new Comparator<Route>() {
+                                    @Override
+                                    public int compare(Route lhs, Route rhs) {
+                                        return lhs.getDistance().compareTo(rhs.getDistance());
+                                    }
+                                }
+                        );*/
+                        break;
+                    case "Time":
+                        Collections.sort(Friendslist, new Comparator<Route>() {
+                                    @Override
+                                    public int compare(Route lhs, Route rhs) {
+                                        return lhs.getTime().compareTo(rhs.getTime());
+                                    }
+                                }
+                        );
+                        Collections.sort(Globallist, new Comparator<Route>() {
+                                    @Override
+                                    public int compare(Route lhs, Route rhs) {
+                                        return lhs.getTime().compareTo(rhs.getTime());
+                                    }
+                                }
+                        );
+                        break;
+                }
+            }
+        });
+
+
+
         //ArrayAdapter array_adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, spinner_array);
         //array_adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
 
@@ -107,8 +185,8 @@ public class RankingFragment extends Fragment {
 
         //TabHost
         TabHost tabHost = (TabHost) rootView.findViewById(R.id.tabHostRank);
-        ListView list_global = (ListView) rootView.findViewById(R.id.listViewGlobal);
-        ListView list_friends = (ListView) rootView.findViewById(R.id.listViewFriends);
+        list_global = (ListView) rootView.findViewById(R.id.listViewGlobal);
+        list_friends = (ListView) rootView.findViewById(R.id.listViewFriends);
         tabHost.setup();
 
 
@@ -128,35 +206,7 @@ public class RankingFragment extends Fragment {
         //ArrayAdapter adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, items_Globallist);
         //list_global.setAdapter(adapter);
 
-        ArrayList<Route> r = new ArrayList<>();
-        /*r.add(new Route(new Date(2015,2,12)));
-        r.add(new Route(new Date(2015,5,12)));
-        r.add(new Route(new Date(2015,4,12)));*/
 
-
-        list_global.setAdapter(new ItemAdapter(getActivity(),r));
-
-        list_global.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-            }
-        });
-
-        list_friends.setFocusable(true);
-        list_friends.setAdapter(new ItemAdapter(getActivity(),r));
-
-
-        list_friends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("EEEEEEEEEEEEEOOOOOOOOO","OOOOOOOOOOOOOOO");
-                Intent i = new Intent(getActivity(),DetailRouteActivity.class);
-                startActivity(i);
-            }
-        });
 
         return rootView;
 
@@ -267,4 +317,183 @@ public class RankingFragment extends Fragment {
             return true;
         }
     }
+
+    public class ListRoutesAsyncTask extends AsyncTask<Void, Void, List<Route>> {
+
+        private RouteApi regRoute = null;
+        private GoogleCloudMessaging gcm;
+        private Context context;
+
+        private static final String SENDER_ID = "564533837615";
+
+        @Override
+        protected List<Route> doInBackground(Void... params) {
+            if (regRoute==null){
+                RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regRoute = builder.build();
+            }
+
+            String msg = "";
+            try {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(context);
+                }
+                String regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+
+
+
+
+                //return regUser.listUserRoutes(10,regId).execute().getItems();
+
+
+
+
+
+                return  regRoute.listRoutes(10,"dev").execute().getItems();
+
+
+
+
+
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
+
+            }
+
+            return null;
+        }
+
+        public ListRoutesAsyncTask(Context context) {
+            this.context=context;
+        }
+
+        @Override
+        protected void onPostExecute(List<Route> rts) {
+
+
+            if (rts==null){
+                 Globallist = new ArrayList<>();
+            }else {
+                Globallist = new ArrayList<>(rts);
+
+            }
+            list_global.setAdapter(new ItemAdapter(getActivity(),Globallist));
+
+            list_global.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                }
+            });
+
+
+        }
+    }
+
+    public class ListFriendRoutesAsyncTask extends AsyncTask<Void, Void, List<Route>> {
+
+        private RouteApi regRoute = null;
+        private GoogleCloudMessaging gcm;
+        private Context context;
+        private UsersApi regUser = null;
+
+        private static final String SENDER_ID = "564533837615";
+
+        @Override
+        protected List<Route> doInBackground(Void... params) {
+            if (regRoute==null){
+                RouteApi.Builder builder = new RouteApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regRoute = builder.build();
+            }
+            if (regUser==null){
+                UsersApi.Builder builder = new UsersApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regUser = builder.build();
+
+            }
+
+            String msg = "";
+            try {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(context);
+                }
+                String regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+
+                SharedPreferences userDetails = context.getSharedPreferences("userdetails", context.MODE_PRIVATE);
+
+
+                //return regUser.listUserRoutes(10,regId).execute().getItems();
+                String userName;
+                if (userDetails.contains("userName")){
+                    userName = userDetails.getString("userName","");
+                }else{
+                    userName  ="dev";
+                }
+
+                Users user = regUser.getUsers(userDetails.getString("userName","")).execute();
+                List<Route> allFriendsRoutes = new ArrayList<>();
+                if(user.getFriends()!=null){
+                    for (String friendUserName:user.getFriends()){
+                        List<Route> friendRoutes = regRoute.listRouteByUser(20, userName).execute().getItems();
+                        if (friendRoutes!=null){
+                            allFriendsRoutes.addAll(friendRoutes);
+                        }
+                    }
+                }
+
+
+
+                return  allFriendsRoutes;
+
+
+
+
+
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
+
+            }
+
+            return null;
+        }
+
+        public ListFriendRoutesAsyncTask(Context context) {
+            this.context=context;
+        }
+
+        @Override
+        protected void onPostExecute(List<Route> rts) {
+
+
+            if (rts==null){
+                Friendslist = new ArrayList<>();
+            }else {
+                Friendslist = new ArrayList<>(rts);
+
+
+            }
+            list_friends.setAdapter(new ItemAdapter(getActivity(),Friendslist));
+
+
+            list_friends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                }
+            });
+        }
+    }
+
 }

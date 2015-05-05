@@ -1,7 +1,7 @@
 package com.example.joanmarc.runnersranking;
 
 import com.example.joanmarc.myapplication.backend.routeApi.model.Route;
-import com.example.joanmarc.myapplication.backend.routeApi.model.Time;
+
 import com.google.android.gms.maps.model.Polyline;
 
 import java.io.Serializable;

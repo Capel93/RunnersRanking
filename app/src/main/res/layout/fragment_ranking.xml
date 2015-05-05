@@ -70,7 +70,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Filter"
-        android:id="@+id/button"
+        android:id="@+id/buttonFilter"
         android:layout_alignBottom="@+id/spinner"
         android:layout_alignTop="@+id/spinner"
         android:layout_toRightOf="@+id/spinner" />

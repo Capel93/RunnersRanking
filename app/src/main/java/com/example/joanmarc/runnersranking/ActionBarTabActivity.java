@@ -1,12 +1,16 @@
 package com.example.joanmarc.runnersranking;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -23,8 +27,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.joanmarc.myapplication.backend.usersApi.UsersApi;
+import com.example.joanmarc.myapplication.backend.usersApi.model.Users;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
 
 public class ActionBarTabActivity extends ActionBarActivity implements ActionBar.TabListener, ItemFragment.OnFragmentInteractionListener,
@@ -46,12 +58,15 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
     ViewPager mViewPager;
     private ArrayList array;
     private ArrayAdapter arrayAdapter;
+    private String userAdd;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_action_bar_tab);
 
+        mContext = getApplicationContext();
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -111,18 +126,29 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
             startActivity(i);
             return true;
         }
+        final EditText input = new EditText(this);
+
         if(id == R.id.add_user){
             AlertDialog.Builder builderSingle = new AlertDialog.Builder(ActionBarTabActivity.this);
             builderSingle.setIcon(R.drawable.ic_launcher);
-            builderSingle.setTitle("Select One user:-");
-            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+            builderSingle.setView(input);
+            builderSingle.setTitle("Insert Username :-");
+            /*final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                     ActionBarTabActivity.this,
                     android.R.layout.select_dialog_singlechoice);
             arrayAdapter.add("Joan");
             arrayAdapter.add("Marc");
             arrayAdapter.add("Joel");
             arrayAdapter.add("Guillem");
-            arrayAdapter.add("Sergi");
+            arrayAdapter.add("Sergi");*/
+
+            builderSingle.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String value = input.getText().toString();
+                    new UserAddTask(mContext,value).execute();
+                }
+            });
             builderSingle.setNegativeButton("cancel",
                     new DialogInterface.OnClickListener() {
 
@@ -132,7 +158,7 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
                         }
                     });
 
-            builderSingle.setAdapter(arrayAdapter,
+            /*builderSingle.setAdapter(arrayAdapter,
                     new DialogInterface.OnClickListener() {
 
                         @Override
@@ -154,7 +180,7 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
                                     });
                             builderInner.show();
                         }
-                    });
+                    });*/
             builderSingle.show();
         }
 
@@ -291,6 +317,80 @@ public class ActionBarTabActivity extends ActionBarActivity implements ActionBar
 
 
             return rootView;
+        }
+    }
+
+    public class UserAddTask extends AsyncTask<Void, Void, Boolean> {
+
+
+
+        private String msg;
+        private String regId;
+        private String userName;
+
+        private UsersApi regUser = null;
+        private GoogleCloudMessaging gcm;
+        private Context mcontext;
+
+        private static final String SENDER_ID = "564533837615";
+
+
+        public UserAddTask(Context context,String userName) {
+            mcontext=context;
+            this.userName = userName;
+
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            if (regUser==null){
+                UsersApi.Builder builder = new UsersApi.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                        .setRootUrl("https://probable-analog-92915.appspot.com/_ah/api/");
+                regUser = builder.build();
+
+            }
+
+
+            try {
+                if (gcm == null) {
+                    gcm = GoogleCloudMessaging.getInstance(mcontext);
+                }
+                regId = gcm.register(SENDER_ID);
+                msg = "Device registered, registration ID=" + regId;
+
+                SharedPreferences userDetails = mcontext.getSharedPreferences("userdetails", mcontext.MODE_PRIVATE);
+                Users u;
+
+                if((u=regUser.insertFriend(userDetails.getString("userName",""),userName).execute())==null){
+                    return false;
+                }
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                msg = "Error: " + ex.getMessage();
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+
+
+            if (success) {
+
+
+            } else {
+                Toast.makeText(mcontext,msg,Toast.LENGTH_LONG);
+            }
+
+
+        }
+
+        @Override
+        protected void onCancelled() {
+
         }
     }
 
