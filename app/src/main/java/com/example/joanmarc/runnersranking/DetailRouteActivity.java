@@ -51,9 +51,11 @@ public class DetailRouteActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_route2);
         route = (RouteClass) getIntent().getSerializableExtra("route");
+        PlaceholderFragment p= new PlaceholderFragment();
+        p.setRoute(route);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment(route))
+                    .add(R.id.container, p)
                     .commit();
         }
 
@@ -105,8 +107,11 @@ public class DetailRouteActivity extends ActionBarActivity {
         private ArrayAdapter<String> adapter;
         private RouteClass route;
 
-        public PlaceholderFragment(RouteClass route) {
+        public void setRoute(RouteClass route) {
             this.route=route;
+        }
+
+        public PlaceholderFragment() {
         }
 
         @Override
