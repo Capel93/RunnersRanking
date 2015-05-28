@@ -2,6 +2,7 @@ package com.example.joanmarc.runnersranking;
 
 import java.io.Serializable;
 import java.sql.Time;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -11,11 +12,17 @@ import java.util.List;
 public class User implements Serializable {
     private String name;
     private String userName;
+    private String password;
+    private String email;
+
     private List<User> friends;
     private List<RouteClass> routes;
 
     public User(String userName) {
+
         this.userName = userName;
+        this.friends = new ArrayList<>();
+        this.routes = new ArrayList<>();
     }
 
     public String getName() {
@@ -48,6 +55,22 @@ public class User implements Serializable {
 
     public void setRoutes(List<RouteClass> routes) {
         this.routes = routes;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
 
