@@ -77,6 +77,10 @@ public class RouteClass implements Serializable{
         this.latitudes = route.getLatitudes();
     }
 
+
+    public RouteClass() {
+    }
+
     public List<Double> getLongitudes() {
         return longitudes;
     }

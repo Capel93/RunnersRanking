@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,7 +41,17 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +76,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
+    //private UserLoginTask mAuthTask = null;
+    private HttpGETUserAsyncTask mAuthTask = null;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -194,8 +206,11 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(getApplicationContext(),email, password);
-            mAuthTask.execute((Void) null);
+
+            //mAuthTask = new UserLoginTask(getApplicationContext(),email, password);
+            //mAuthTask.execute((Void) null);
+            mAuthTask = new HttpGETUserAsyncTask(getApplicationContext(),email,password);
+            mAuthTask.execute("http://192.168.1.34:3000/users/"+email,email,password);
         }
     }
 
@@ -413,6 +428,9 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 return false;
             }
 
+
+
+
             return true;
         }
 
@@ -448,6 +466,129 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             showProgress(false);
         }
     }
+
+    public class HttpGETUserAsyncTask extends AsyncTask<String, Void, Boolean> {
+
+
+        private Context context;
+        private JSONObject jObj;
+        private String msg;
+
+        private String email;
+        private String mPassword;
+        public HttpGETUserAsyncTask(Context context,String email, String password) {
+
+            this.context = context;
+            this.mPassword = password;
+            this.email = email;
+        }
+
+        @Override
+        protected Boolean doInBackground(String... urls) {
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            mAuthTask = null;
+            showProgress(false);
+
+            if (success) {
+
+                SharedPreferences userDetails = context.getSharedPreferences("userdetails", MODE_PRIVATE);
+                SharedPreferences.Editor edit = userDetails.edit();
+                edit.clear();
+
+                edit.putString("email", email);
+                edit.putString("password", mPassword);
+                edit.commit();
+
+                Intent i = new Intent(login,ActionBarTabActivity.class);
+                startActivity(i);
+                finish();
+            } else {
+                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.requestFocus();
+            }
+
+
+        }
+
+        @Override
+        protected void onCancelled() {
+            mAuthTask = null;
+            showProgress(false);
+        }
+
+        public Boolean GET(String url){
+            InputStream inputStream = null;
+            String result = "";
+            JSONArray dataJsonArr = null;
+
+            try {
+
+                // 1. create HttpClient
+                HttpClient httpclient = new DefaultHttpClient();
+
+                // 2. make POST request to the given URL
+                HttpGet httpGet = new HttpGet(url);
+
+                String json = "";
+
+
+                httpGet.setHeader("Accept", "application/json");
+                httpGet.setHeader("Content-type", "application/json");
+
+                // 8. Execute POST request to the given URL
+                HttpResponse httpResponse = httpclient.execute(httpGet);
+
+                Log.d("Hello: ", httpResponse.toString());
+
+                // 9. receive response as inputStream
+                inputStream = httpResponse.getEntity().getContent();
+
+                // 10. convert inputstream to string
+                if (inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                    jObj = new JSONObject(result);
+
+
+
+                    if(jObj.getString("email").equals(this.email)&&jObj.getString("password").equals(this.mPassword)){
+                        return true;
+                    }
+
+
+
+                }else
+                    result = "Did not work!";
+
+            } catch (Exception e) {
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+
+            // 11. return result
+            return false;
+        }
+
+
+        private String convertInputStreamToString(InputStream inputStream) throws IOException {
+            BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+            String line = "";
+            String result = "";
+            while((line = bufferedReader.readLine()) != null)
+                result += line;
+
+            inputStream.close();
+            return result;
+
+        }
+
+
+
+
+    }
+
 }
 
 

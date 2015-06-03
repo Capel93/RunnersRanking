@@ -65,7 +65,7 @@ public class RegisterActivity extends ActionBarActivity {
 
                 if(pass1.getText().toString().equals(pass2.getText().toString())){
                     User u = new User(user.getText().toString());
-                    u.setName("");
+                    u.setUserName(user.getText().toString());
                     u.setEmail(email.getText().toString());
                     u.setPassword(pass1.getText().toString());
                     new HttpPOSTUserAsyncTask(u,context).execute("http://192.168.1.34:3000/users");
@@ -232,7 +232,7 @@ public class RegisterActivity extends ActionBarActivity {
                 // 3. build jsonObject
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.accumulate("name", person.getName());
-                jsonObject.accumulate("userName", person.getUserName());
+                jsonObject.accumulate("username", person.getUserName());
                 jsonObject.accumulate("email",person.getEmail());
                 jsonObject.accumulate("password",person.getPassword());
                 jsonObject.accumulate("friends", person.getFriends());

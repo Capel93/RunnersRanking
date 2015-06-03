@@ -1,7 +1,9 @@
 package com.example.joanmarc.runnersranking;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -31,7 +33,17 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -106,8 +118,12 @@ public class RankingFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.fragment_ranking, container, false);
 
-        new ListRoutesAsyncTask(getActivity()).execute();
-        new ListFriendRoutesAsyncTask(getActivity()).execute();
+        //new ListRoutesAsyncTask(getActivity()).execute();
+        //new ListFriendRoutesAsyncTask(getActivity()).execute();
+        new HttpGETRoutesAsyncTask(getActivity()).execute("http://192.168.1.34:3000/routes/");
+        SharedPreferences userDetails = getActivity().getSharedPreferences("userdetails", getActivity().MODE_PRIVATE);
+
+        new HttpGETFriendsRoutesAsyncTask(getActivity()).execute("http://192.168.1.34:3000/friends/"+userDetails.getString("email",""));
 
         //Spinners
         ArrayList spinner_array = new ArrayList<String>();
@@ -495,5 +511,351 @@ public class RankingFragment extends Fragment {
             });
         }
     }
+
+    public class HttpGETRoutesAsyncTask extends AsyncTask<String, Void, ArrayList<Route>> {
+
+
+        private Context context;
+        private JSONObject jObj;
+        private String msg;
+
+        private String email;
+        private String mPassword;
+        public HttpGETRoutesAsyncTask(Context context) {
+
+            this.context = context;
+            //this.mPassword = password;
+            //this.email = email;
+        }
+
+        @Override
+        protected ArrayList<Route> doInBackground(String... urls) {
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(ArrayList<Route> routes) {
+
+            if (routes==null){
+                Globallist = new ArrayList<>();
+            }else {
+                Globallist = routes;
+
+            }
+            list_global.setAdapter(new ItemAdapter(getActivity(),Globallist));
+
+            list_global.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                }
+            });
+
+        }
+
+        @Override
+        protected void onCancelled() {}
+
+
+        public ArrayList<Route> GET(String url){
+            InputStream inputStream = null;
+            String result = "";
+            JSONArray dataJsonArr = null;
+
+            try {
+
+                // 1. create HttpClient
+                HttpClient httpclient = new DefaultHttpClient();
+
+                // 2. make POST request to the given URL
+                HttpGet httpGet = new HttpGet(url);
+
+                String json = "";
+
+
+                httpGet.setHeader("Accept", "application/json");
+                httpGet.setHeader("Content-type", "application/json");
+
+                // 8. Execute POST request to the given URL
+                HttpResponse httpResponse = httpclient.execute(httpGet);
+
+                Log.d("Hello: ", httpResponse.toString());
+
+                // 9. receive response as inputStream
+                inputStream = httpResponse.getEntity().getContent();
+
+                // 10. convert inputstream to string
+                if (inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                    JSONArray array = new JSONArray(result);
+                    ArrayList<Route> routes = new ArrayList();
+
+                    for (int i = 0; i < array.length(); i++) {
+
+                        JSONObject obj = array.getJSONObject(i);
+
+                        Route route = new Route();
+                        route.setDistance(new Double(obj.getInt("distance")));
+                        route.setTime(new Long(obj.getInt("time")));
+
+                        ArrayList<Double> lat = new ArrayList<>();
+                        for (int j = 0; j < obj.getJSONArray("latitudes").length(); j++) {
+                            JSONArray a = obj.getJSONArray("latitudes");
+                            lat.add(a.getDouble(i));
+                        }
+                        route.setLatitudes(lat);
+
+                        ArrayList<Double> lng = new ArrayList<>();
+                        for (int j = 0; j < obj.getJSONArray("longitudes").length(); j++) {
+                            lng.add(obj.getJSONArray("longitudes").getDouble(i));
+                        }
+                        route.setLongitudes(lng);
+
+                        routes.add(route);
+
+                    }
+
+
+                    return routes;
+
+
+                }else
+                    result = "Did not work!";
+
+            } catch (Exception e) {
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+
+            // 11. return result
+            return null;
+
+        }
+
+
+        private String convertInputStreamToString(InputStream inputStream) throws IOException {
+            BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+            String line = "";
+            String result = "";
+            while((line = bufferedReader.readLine()) != null)
+                result += line;
+
+            inputStream.close();
+            return result;
+
+        }
+
+
+
+
+    }
+
+    public class HttpGETFriendsRoutesAsyncTask extends AsyncTask<String, Void, ArrayList<Route>> {
+
+
+        private Context context;
+        private JSONObject jObj;
+        private String msg;
+
+        private String email;
+        private String mPassword;
+        public HttpGETFriendsRoutesAsyncTask(Context context) {
+
+            this.context = context;
+            //this.mPassword = password;
+            //this.email = email;
+        }
+
+        @Override
+        protected ArrayList<Route> doInBackground(String... urls) {
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(ArrayList<Route> routes) {
+
+            if (routes==null){
+                Friendslist = new ArrayList<>();
+            }else {
+                Friendslist = new ArrayList<>(routes);
+
+
+            }
+            list_friends.setAdapter(new ItemAdapter(getActivity(),Friendslist));
+
+
+            list_friends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                }
+            });
+
+        }
+
+        @Override
+        protected void onCancelled() {}
+
+
+        public ArrayList<Route> GET(String url){
+            InputStream inputStream = null;
+            String result = "";
+            JSONArray dataJsonArr = null;
+
+            try {
+
+                // 1. create HttpClient
+                HttpClient httpclient = new DefaultHttpClient();
+
+                // 2. make POST request to the given URL
+                HttpGet httpGet = new HttpGet(url);
+
+                String json = "";
+
+
+                httpGet.setHeader("Accept", "application/json");
+                httpGet.setHeader("Content-type", "application/json");
+
+                // 8. Execute POST request to the given URL
+                HttpResponse httpResponse = httpclient.execute(httpGet);
+
+                Log.d("Hello: ", httpResponse.toString());
+
+                // 9. receive response as inputStream
+                inputStream = httpResponse.getEntity().getContent();
+
+                // 10. convert inputstream to string
+                if (inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                    JSONArray array = new JSONArray(result);
+                    ArrayList<Route> routes = new ArrayList();
+
+                    for (int i = 0; i < array.length(); i++) {
+
+                        JSONObject obj = array.getJSONObject(i);
+
+                        String friend = obj.getString("email");
+
+                        ArrayList<Route> friendRoutes = GETFriendRoutes("http://192.168.1.34:3000/routes/"+friend);
+
+                        routes.addAll(friendRoutes);
+
+                    }
+
+
+                    return routes;
+
+
+                }else
+                    result = "Did not work!";
+
+            } catch (Exception e) {
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+
+            // 11. return result
+            return null;
+
+        }
+
+        public ArrayList<Route> GETFriendRoutes(String url){
+            InputStream inputStream = null;
+            String result = "";
+            JSONArray dataJsonArr = null;
+
+            try {
+
+                // 1. create HttpClient
+                HttpClient httpclient = new DefaultHttpClient();
+
+                // 2. make POST request to the given URL
+                HttpGet httpGet = new HttpGet(url);
+
+                String json = "";
+
+
+                httpGet.setHeader("Accept", "application/json");
+                httpGet.setHeader("Content-type", "application/json");
+
+                // 8. Execute POST request to the given URL
+                HttpResponse httpResponse = httpclient.execute(httpGet);
+
+                Log.d("Hello: ", httpResponse.toString());
+
+                // 9. receive response as inputStream
+                inputStream = httpResponse.getEntity().getContent();
+
+                // 10. convert inputstream to string
+                if (inputStream != null){
+                    result = convertInputStreamToString(inputStream);
+                    JSONArray array = new JSONArray(result);
+                    ArrayList<Route> routes = new ArrayList();
+
+                    for (int i = 0; i < array.length(); i++) {
+
+                        JSONObject obj = array.getJSONObject(i);
+
+                        Route route = new Route();
+                        route.setDistance(new Double(obj.getInt("distance")));
+                        route.setTime(new Long(obj.getInt("time")));
+
+                        ArrayList<Double> lat = new ArrayList<>();
+                        for (int j = 0; j < obj.getJSONArray("latitudes").length(); j++) {
+                            lat.add(obj.getJSONArray("latitudes").getDouble(i));
+                        }
+                        route.setLatitudes(lat);
+
+                        ArrayList<Double> lng = new ArrayList<>();
+                        for (int j = 0; j < obj.getJSONArray("longitudes").length(); j++) {
+                            lng.add(obj.getJSONArray("longitudes").getDouble(i));
+                        }
+                        route.setLongitudes(lng);
+
+                        routes.add(route);
+
+                    }
+
+
+                    return routes;
+
+
+                }else
+                    result = "Did not work!";
+
+            } catch (Exception e) {
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+
+            // 11. return result
+            return null;
+
+        }
+
+
+
+        private String convertInputStreamToString(InputStream inputStream) throws IOException {
+            BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+            String line = "";
+            String result = "";
+            while((line = bufferedReader.readLine()) != null)
+                result += line;
+
+            inputStream.close();
+            return result;
+
+        }
+
+
+
+
+    }
+
+
+
+
+
+
+
 
 }
